@@ -66,3 +66,4 @@ class UpdateBookRequest extends FormRequest
         ];
     }
 }
+

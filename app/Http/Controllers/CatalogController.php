@@ -40,3 +40,4 @@ class CatalogController extends Controller
         return view('catalog.index', compact('books', 'categories'));
     }
 }
+

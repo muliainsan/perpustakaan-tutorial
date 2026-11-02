@@ -40,3 +40,4 @@ class UpdateAuthorRequest extends FormRequest
         ];
     }
 }
+

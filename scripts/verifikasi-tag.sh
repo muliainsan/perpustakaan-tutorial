@@ -78,7 +78,12 @@ case "$TAG" in
         echo "Uji asap pertemuan-2 (Katalog, Admin Books, Categories, Authors): BERHASIL"
         ;;
     "pertemuan-3")
+        curl -s -f http://127.0.0.1:8181/ > /dev/null
         curl -s -f http://127.0.0.1:8181/api/books | grep -q '"data"'
+        curl -s -f http://127.0.0.1:8181/api/categories | grep -q '"data"'
+        curl -s -f http://127.0.0.1:8181/api/authors | grep -q '"data"'
+        curl -s -f http://127.0.0.1:8181/api/loans | grep -q '"data"'
+        echo "Uji asap pertemuan-3 (API books, categories, authors, loans): BERHASIL"
         ;;
     "pertemuan-4")
         # Pastikan tidak ada TODO tertinggal

@@ -218,3 +218,4 @@ npm run build
 | **Penanganan Error Restrict** | 15% | Integritas referensial terjaga dengan penanganan exception ramah pengguna. |
 | **Kualitas Antarmuka UI** | 10% | Tampilan rapi, responsif, menggunakan Tailwind CSS via Vite tanpa CDN. |
 | **Automated Testing** | 10% | Feature Test komprehensif menguji skenario positif dan negatif secara tuntas. |
+

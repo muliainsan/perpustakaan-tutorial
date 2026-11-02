@@ -1,0 +1,68 @@
+### Variabel Lingkungan
+@baseUrl = http://127.0.0.1:8000/api
+@contentType = application/json
+
+### 1. Ambil Katalog Buku (Pagination & Filter)
+GET {{baseUrl}}/books?per_page=5&page=1
+Accept: {{contentType}}
+
+### 2. Cari Buku Berdasarkan Kata Kunci (Search)
+GET {{baseUrl}}/books?search=Clean
+Accept: {{contentType}}
+
+### 3. Filter Buku yang Hanya Memiliki Stok (Available=1)
+GET {{baseUrl}}/books?available=1&per_page=5
+Accept: {{contentType}}
+
+### 4. Ambil Detail Satu Buku
+GET {{baseUrl}}/books/1
+Accept: {{contentType}}
+
+### 5. Ambil Daftar Kategori Referensi
+GET {{baseUrl}}/categories
+Accept: {{contentType}}
+
+### 6. Ambil Daftar Penulis Referensi
+GET {{baseUrl}}/authors
+Accept: {{contentType}}
+
+### 7. Ambil Riwayat Peminjaman Buku
+GET {{baseUrl}}/loans
+Accept: {{contentType}}
+
+### 8. Buat Transaksi Peminjaman Baru
+POST {{baseUrl}}/loans
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "user_id": 3,
+  "book_ids": [1, 2]
+}
+
+### 9. Ambil Detail Transaksi Peminjaman
+GET {{baseUrl}}/loans/1
+Accept: {{contentType}}
+
+### 10. Pengembalian Buku (Tepat Waktu / Terlambat)
+POST {{baseUrl}}/loans/1/return
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "returned_at": "2026-11-20"
+}
+
+### 11. Pelunasan Denda Keterlambatan
+POST {{baseUrl}}/loans/1/pay-fine
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+### 12. Uji Coba Error Format JSON Otomatis (Tanpa Header Accept)
+POST {{baseUrl}}/loans
+Content-Type: application/json
+
+{
+  "user_id": 99999,
+  "book_ids": []
+}

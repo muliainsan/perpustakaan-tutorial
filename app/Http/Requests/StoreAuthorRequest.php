@@ -40,3 +40,4 @@ class StoreAuthorRequest extends FormRequest
         ];
     }
 }
+
