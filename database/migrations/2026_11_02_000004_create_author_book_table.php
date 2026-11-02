@@ -26,3 +26,4 @@ return new class extends Migration
         Schema::dropIfExists('author_book');
     }
 };
+

@@ -71,7 +71,11 @@ case "$TAG" in
         '
         ;;
     "pertemuan-2")
-        curl -s -f http://127.0.0.1:8181/admin/books > /dev/null
+        curl -s -f http://127.0.0.1:8181/ | grep -q "Katalog Buku Perpustakaan"
+        curl -s -f http://127.0.0.1:8181/admin/books | grep -q "Kelola Koleksi Buku"
+        curl -s -f http://127.0.0.1:8181/admin/categories | grep -q "Kelola Kategori Buku"
+        curl -s -f http://127.0.0.1:8181/admin/authors | grep -q "Kelola Data Penulis"
+        echo "Uji asap pertemuan-2 (Katalog, Admin Books, Categories, Authors): BERHASIL"
         ;;
     "pertemuan-3")
         curl -s -f http://127.0.0.1:8181/api/books | grep -q '"data"'

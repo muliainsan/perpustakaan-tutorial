@@ -117,3 +117,4 @@ erDiagram
    - Operasi penghapusan data induk yang terikat data anak akan menghasilkan `QueryException` (MySQL Error 1451). Sistem aplikasi menangkap exception ini dan mengembalikan respon HTTP 409 (Conflict) yang informatif.
 2. **Pencegahan Stok Negatif (*Pessimistic Locking*):**
    - Saat peminjaman dilakukan, pembacaan stok buku dilindungi dengan `lockForUpdate()` dalam blok `DB::transaction()` untuk mencegah *race condition* jika beberapa peminjam meminjam buku yang sama secara bersamaan.
+

@@ -33,3 +33,4 @@ class LoanItem extends Model
         return $this->belongsTo(Book::class);
     }
 }
+

@@ -55,3 +55,4 @@ class Book extends Model
         return $this->hasMany(LoanItem::class);
     }
 }
+

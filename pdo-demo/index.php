@@ -198,3 +198,4 @@ $deleteStmt->execute([':id' => $newBookId]);
 echo "-> Buku uji coba dengan ID {$newBookId} telah dibersihkan (dihapus).\n";
 echo "   Status: Selesai dengan sukses!\n";
 echo "=========================================================\n";
+

@@ -143,15 +143,16 @@ class DatabaseSeeder extends Seeder
         foreach ($bookTitles as $index => $title) {
             $catIndex = intdiv($index, 8); // 8 buku per kategori
             $category = $categories[$catIndex];
+            $isbn = sprintf('978-%02d-%05d-%03d-%d', $catIndex + 1, $index * 13 + 101, 100 + $index, $index % 10);
 
             $book = Book::firstOrCreate(
-                ['title' => $title],
+                ['isbn' => $isbn],
                 [
                     'category_id' => $category->id,
-                    'isbn' => sprintf('978-%02d-%05d-%03d-%d', $catIndex + 1, $index * 13 + 101, 100 + $index, $index % 10),
-                    'publisher' => $publishers[$index % count($publishers)],
-                    'year' => 2010 + ($index % 15),
-                    'stock' => 5 + ($index % 10),
+                    'title'       => $title,
+                    'publisher'   => $publishers[$index % count($publishers)],
+                    'year'        => 2010 + ($index % 15),
+                    'stock'       => 5 + ($index % 10),
                 ]
             );
 
@@ -189,7 +190,6 @@ class DatabaseSeeder extends Seeder
             LoanItem::create(['loan_id' => $loan2->id, 'book_id' => $books[8]->id]);
 
             // Peminjaman 3: Sudah dikembalikan terlambat dan ada denda (oleh Anggota 3)
-            // Terlambat 3 hari, 2 buku -> 3 hari * 1000 * 2 buku = Rp 6.000 denda unpaid
             $loan3 = Loan::create([
                 'user_id' => $anggotaList[2]->id,
                 'loaned_at' => now()->subDays(20)->format('Y-m-d'),

@@ -57,3 +57,4 @@ class Loan extends Model
         return $this->belongsToMany(Book::class, 'loan_items');
     }
 }
+

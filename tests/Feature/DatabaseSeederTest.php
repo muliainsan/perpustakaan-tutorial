@@ -77,3 +77,4 @@ class DatabaseSeederTest extends TestCase
         $categoryWithBooks->delete();
     }
 }
+

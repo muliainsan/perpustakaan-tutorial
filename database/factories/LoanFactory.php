@@ -28,3 +28,4 @@ class LoanFactory extends Factory
         ];
     }
 }
+

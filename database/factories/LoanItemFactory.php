@@ -22,3 +22,4 @@ class LoanItemFactory extends Factory
         ];
     }
 }
+

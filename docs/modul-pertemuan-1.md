@@ -249,3 +249,4 @@ php artisan test
 | **Pemahaman Native PDO** | 20% | Mampu menjelaskan peran prepared statement dan perbandingannya dengan Eloquent ORM. |
 | **Pengujian Otomatis (*Testing*)** | 15% | Feature Test dibuat dengan baik dan 100% lulus (hijau). |
 | **Kerapian & Kepatuhan Konvensi** | 10% | Komentar edukatif berbahasa Indonesia dan penamaan kode standar Laravel (PSR-12). |
+

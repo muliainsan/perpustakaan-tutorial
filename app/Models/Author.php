@@ -24,3 +24,4 @@ class Author extends Model
         return $this->belongsToMany(Book::class, 'author_book');
     }
 }
+
