@@ -61,6 +61,14 @@ case "$TAG" in
         ;;
     "pertemuan-1")
         curl -s -f http://127.0.0.1:8181/ > /dev/null
+        php artisan tinker --execute='
+            assert(\App\Models\Category::count() === 5, "Categories count mismatch");
+            assert(\App\Models\Author::count() === 10, "Authors count mismatch");
+            assert(\App\Models\Book::count() === 40, "Books count mismatch");
+            assert(\App\Models\User::count() === 7, "Users count mismatch");
+            assert(\App\Models\Loan::count() >= 3, "Loans count mismatch");
+            echo "Verifikasi hitungan data seeder pertemuan-1: BERHASIL\n";
+        '
         ;;
     "pertemuan-2")
         curl -s -f http://127.0.0.1:8181/admin/books > /dev/null
