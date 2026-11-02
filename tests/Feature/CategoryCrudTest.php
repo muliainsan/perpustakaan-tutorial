@@ -4,10 +4,22 @@ namespace Tests\Feature;
 
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\User;
 use Tests\TestCase;
 
 class CategoryCrudTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $admin = User::firstOrCreate(['email' => 'admin@perpus.test'], [
+            'name'     => 'Administrator',
+            'password' => bcrypt('password'),
+            'role'     => 'admin',
+        ]);
+        $this->actingAs($admin);
+    }
     public function test_can_view_category_index_page(): void
     {
         $response = $this->get(route('admin.categories.index'));

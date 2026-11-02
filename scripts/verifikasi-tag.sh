@@ -86,8 +86,25 @@ case "$TAG" in
         echo "Uji asap pertemuan-3 (API books, categories, authors, loans): BERHASIL"
         ;;
     "pertemuan-4")
-        # Pastikan tidak ada TODO tertinggal
+        # 1. Pastikan tidak ada TODO tertinggal di app/ dan routes/
         ! grep -rn "// TODO P4" app/ routes/
+        # 2. Uji asap akses web publik dan form auth
+        curl -s -f http://127.0.0.1:8181/ | grep -q "Katalog"
+        curl -s -f http://127.0.0.1:8181/login | grep -q "Masuk ke Akun"
+        curl -s -f http://127.0.0.1:8181/register | grep -q "Daftar Anggota Baru"
+        # 3. Uji proteksi rute admin terhadap tamu (302 redirect)
+        ADMIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8181/admin/books)
+        if [ "$ADMIN_STATUS" -ne 302 ]; then
+            echo "Galat: Akses tamu ke /admin/books seharusnya mengembalikan HTTP 302 redirect, didapat $ADMIN_STATUS"
+            exit 1
+        fi
+        # 4. Uji proteksi endpoint API tanpa token (401 JSON)
+        API_ME_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8181/api/me)
+        if [ "$API_ME_STATUS" -ne 401 ]; then
+            echo "Galat: Akses tanpa token ke /api/me seharusnya mengembalikan HTTP 401, didapat $API_ME_STATUS"
+            exit 1
+        fi
+        echo "Uji asap pertemuan-4 (Pembersihan TODO, Auth Web, Proteksi 302 Admin, Proteksi 401 API): BERHASIL"
         ;;
 esac
 

@@ -1,68 +1,113 @@
-### Variabel Lingkungan
+### Koleksi Uji REST API Perpustakaan (Pertemuan 4)
+### Gunakan ekstensi REST Client di VS Code atau editor sejenis
+
 @baseUrl = http://127.0.0.1:8000/api
-@contentType = application/json
 
-### 1. Ambil Katalog Buku (Pagination & Filter)
-GET {{baseUrl}}/books?per_page=5&page=1
-Accept: {{contentType}}
-
-### 2. Cari Buku Berdasarkan Kata Kunci (Search)
-GET {{baseUrl}}/books?search=Clean
-Accept: {{contentType}}
-
-### 3. Filter Buku yang Hanya Memiliki Stok (Available=1)
-GET {{baseUrl}}/books?available=1&per_page=5
-Accept: {{contentType}}
-
-### 4. Ambil Detail Satu Buku
-GET {{baseUrl}}/books/1
-Accept: {{contentType}}
-
-### 5. Ambil Daftar Kategori Referensi
-GET {{baseUrl}}/categories
-Accept: {{contentType}}
-
-### 6. Ambil Daftar Penulis Referensi
-GET {{baseUrl}}/authors
-Accept: {{contentType}}
-
-### 7. Ambil Riwayat Peminjaman Buku
-GET {{baseUrl}}/loans
-Accept: {{contentType}}
-
-### 8. Buat Transaksi Peminjaman Baru
-POST {{baseUrl}}/loans
-Content-Type: {{contentType}}
-Accept: {{contentType}}
+### 1. LOGIN ADMIN (Mendapatkan Bearer Token)
+# @name adminLogin
+POST {{baseUrl}}/login
+Content-Type: application/json
+Accept: application/json
 
 {
-  "user_id": 3,
+  "email": "admin@perpus.test",
+  "password": "password"
+}
+
+### Simpan token dari respons di atas
+@adminToken = {{adminLogin.response.body.token}}
+
+### 2. LOGIN ANGGOTA
+# @name anggotaLogin
+POST {{baseUrl}}/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "anggota1@perpus.test",
+  "password": "password"
+}
+
+### Simpan token anggota
+@anggotaToken = {{anggotaLogin.response.body.token}}
+
+### 3. AMBIL PROFIL USER YANG SEDANG LOGIN (GET /api/me)
+GET {{baseUrl}}/me
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 4. KATALOG BUKU PUBLIK (Tanpa Token)
+GET {{baseUrl}}/books?per_page=5
+Accept: application/json
+
+### 5. PENCARIAN BUKU DENGAN FILTER
+GET {{baseUrl}}/books?search=Laravel&available=1
+Accept: application/json
+
+### 6. DETAIL BUKU
+GET {{baseUrl}}/books/1
+Accept: application/json
+
+### 7. DAFTAR KATEGORI
+GET {{baseUrl}}/categories
+Accept: application/json
+
+### 8. DAFTAR PENULIS
+GET {{baseUrl}}/authors
+Accept: application/json
+
+### 9. BUAT PEMINJAMAN BARU (Anggota)
+POST {{baseUrl}}/loans
+Authorization: Bearer {{anggotaToken}}
+Content-Type: application/json
+Accept: application/json
+
+{
   "book_ids": [1, 2]
 }
 
-### 9. Ambil Detail Transaksi Peminjaman
-GET {{baseUrl}}/loans/1
-Accept: {{contentType}}
+### 10. LIHAT DAFTAR PINJAMAN ANGGOTA (Hanya data miliknya)
+GET {{baseUrl}}/loans
+Authorization: Bearer {{anggotaToken}}
+Accept: application/json
 
-### 10. Pengembalian Buku (Tepat Waktu / Terlambat)
+### 11. UJI IDOR: Anggota mencoba membuka pinjaman orang lain (Harus 403 Forbidden)
+GET {{baseUrl}}/loans/2
+Authorization: Bearer {{anggotaToken}}
+Accept: application/json
+
+### 12. PENGEMBALIAN BUKU (Petugas/Admin)
 POST {{baseUrl}}/loans/1/return
-Content-Type: {{contentType}}
-Accept: {{contentType}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+Accept: application/json
 
 {
   "returned_at": "2026-11-20"
 }
 
-### 11. Pelunasan Denda Keterlambatan
+### 13. PELUNASAN DENDA (Petugas/Admin)
 POST {{baseUrl}}/loans/1/pay-fine
-Content-Type: {{contentType}}
-Accept: {{contentType}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
 
-### 12. Uji Coba Error Format JSON Otomatis (Tanpa Header Accept)
-POST {{baseUrl}}/loans
+### 14. TAMBAH KATEGORI BARU (Petugas/Admin)
+POST {{baseUrl}}/categories
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
+Accept: application/json
 
 {
-  "user_id": 99999,
-  "book_ids": []
+  "name": "Kecerdasan Buatan & Data Science",
+  "description": "Buku-buku seputar Machine Learning, AI, dan Python Data"
 }
+
+### 15. HAPUS KATEGORI YANG MEMILIKI BUKU (Uji Integritas FK Restrict -> 409 Conflict)
+DELETE {{baseUrl}}/categories/1
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 16. LOGOUT API (Mencabut Token)
+POST {{baseUrl}}/logout
+Authorization: Bearer {{adminToken}}
+Accept: application/json

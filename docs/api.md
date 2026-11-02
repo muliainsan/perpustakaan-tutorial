@@ -1,128 +1,146 @@
 # Dokumentasi REST API - Sistem Perpustakaan
 
-Dokumentasi ini menjelaskan standar antarmuka pemograman aplikasi (*Application Programming Interface*) berbasis REST untuk sistem perpustakaan.
+Dokumentasi ini menjelaskan standar antarmuka pemrograman aplikasi (*Application Programming Interface*) berbasis REST untuk sistem perpustakaan dengan autentikasi Laravel Sanctum dan kontrol akses berbasis peran (*Role-Based Access Control*).
 
 ---
 
-## 1. Standar Format Respons
+## 1. Standar Format Respons & Autentikasi
 
-Seluruh endpoint pada prefix `/api/*` secara otomatis mengembalikan respons berformat `application/json`, termasuk penanganan galat (*exception handling*), terlepas dari apakah client menyertakan header `Accept: application/json` atau tidak.
-
-### Struktur Respons Sukses (Koleksi / Pagination)
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "title": "Clean Code",
-      "isbn": "978-01-32350-88-4",
-      "publisher": "Prentice Hall",
-      "year": 2008,
-      "stock": 5,
-      "is_available": true,
-      "category": {
-        "id": 1,
-        "name": "Pemrograman & Teknologi"
-      },
-      "authors": [
-        {
-          "id": 1,
-          "name": "Robert C. Martin"
-        }
-      ],
-      "created_at": "2026-11-02T07:00:00.000000Z"
-    }
-  ],
-  "links": {
-    "first": "http://127.0.0.1:8000/api/books?page=1",
-    "last": "http://127.0.0.1:8000/api/books?page=4",
-    "prev": null,
-    "next": "http://127.0.0.1:8000/api/books?page=2"
-  },
-  "meta": {
-    "current_page": 1,
-    "from": 1,
-    "last_page": 4,
-    "per_page": 10,
-    "to": 10,
-    "total": 40
-  }
-}
+### 1.1 Header Wajib
+Untuk mengakses endpoint yang dilindungi, sertakan token autentikasi pada header:
+```http
+Authorization: Bearer <token_sanctum_anda>
+Accept: application/json
+Content-Type: application/json
 ```
-
-### Struktur Respons Galat Validasi (HTTP 422)
-```json
-{
-  "message": "Pilih minimal satu buku untuk dipinjam.",
-  "errors": {
-    "book_ids": [
-      "Pilih minimal satu buku untuk dipinjam."
-    ]
-  }
-}
-```
+*Catatan:* Seluruh respons di bawah prefix `/api/*` dijamin selalu berformat `application/json`, termasuk pada skenario galat validasi, kegagalan autentikasi (401), pelanggaran otorisasi (403), konflik integritas (409), maupun pembatasan laju permintaan (429).
 
 ---
 
-## 2. Ringkasan Endpoint API
+## 2. Matriks Endpoint API
 
-| Method | Endpoint | Deskripsi | Otorisasi (P4) |
+| Method | Endpoint | Deskripsi | Otorisasi & Peran |
 |---|---|---|---|
-| `GET` | `/api/books` | Mengambil daftar katalog buku (paginated & filterable) | Publik |
-| `GET` | `/api/books/{id}` | Mengambil informasi detail satu buku | Publik |
-| `GET` | `/api/categories` | Mengambil daftar seluruh kategori | Publik |
-| `GET` | `/api/authors` | Mengambil daftar seluruh penulis | Publik |
-| `GET` | `/api/loans` | Riwayat transaksi peminjaman | Token Sanctum |
-| `GET` | `/api/loans/{id}` | Detail transaksi peminjaman spesifik | Token Sanctum |
-| `POST` | `/api/loans` | Membuat transaksi peminjaman baru | Token Sanctum |
-| `POST` | `/api/loans/{id}/return` | Memproses pengembalian buku & kalkulasi denda | Token Sanctum |
-| `POST` | `/api/loans/{id}/pay-fine` | Mencatat pelunasan denda keterlambatan | Token Sanctum |
+| `POST` | `/api/login` | Autentikasi dan penerbitan Bearer token (Rate limit: 5 req/min) | Publik |
+| `POST` | `/api/logout` | Mencabut (*revoke*) token Sanctum aktif | `auth:sanctum` |
+| `GET` | `/api/me` | Mengambil data profil pengguna yang login | `auth:sanctum` |
+| `GET` | `/api/books` | Katalog buku berhalaman dengan filter pencarian | Publik |
+| `GET` | `/api/books/{id}` | Detail satu buku | Publik |
+| `GET` | `/api/categories` | Daftar seluruh kategori buku | Publik |
+| `GET` | `/api/categories/{id}` | Detail satu kategori buku | Publik |
+| `GET` | `/api/authors` | Daftar seluruh penulis | Publik |
+| `GET` | `/api/authors/{id}` | Detail satu penulis | Publik |
+| `GET` | `/api/loans` | Daftar peminjaman (Anggota: milik sendiri; Admin/Petugas: semua) | `auth:sanctum` |
+| `GET` | `/api/loans/{id}` | Detail peminjaman (Proteksi IDOR: 403 bila bukan miliknya) | `auth:sanctum` |
+| `POST` | `/api/loans` | Pengajuan pinjaman baru | `auth:sanctum` |
+| `POST` | `/api/loans/{id}/return` | Pengembalian buku & kalkulasi denda otomatis | `role:admin,petugas` |
+| `POST` | `/api/loans/{id}/pay-fine` | Pelunasan denda keterlambatan | `role:admin,petugas` |
+| `POST` | `/api/categories` | Tambah kategori baru | `role:admin,petugas` |
+| `PUT` | `/api/categories/{id}` | Perbarui data kategori | `role:admin,petugas` |
+| `DELETE` | `/api/categories/{id}` | Hapus kategori (409 bila terkait buku) | `role:admin,petugas` |
+| `POST` | `/api/authors` | Tambah penulis baru | `role:admin,petugas` |
+| `PUT` | `/api/authors/{id}` | Perbarui data penulis | `role:admin,petugas` |
+| `DELETE` | `/api/authors/{id}` | Hapus penulis | `role:admin,petugas` |
+| `POST` | `/api/books` | Tambah buku baru ke koleksi | `role:admin,petugas` |
+| `PUT` | `/api/books/{id}` | Perbarui data buku | `role:admin,petugas` |
+| `DELETE` | `/api/books/{id}` | Hapus buku (409 bila terkait pinjaman aktif) | `role:admin,petugas` |
 
 ---
 
-## 3. Rincian Endpoint
+## 3. Rincian Endpoint Utama
 
-### 3.1 `GET /api/books`
-Mengambil koleksi buku dengan parameter query:
-- `search` *(string, opsional)*: Kata kunci judul, nomor ISBN, atau nama penulis.
-- `category_id` *(integer, opsional)*: Filter berdasarkan ID kategori.
-- `available` *(boolean 0/1, opsional)*: Jika bernilai `1`, hanya menampilkan buku dengan stok $> 0$.
-- `per_page` *(integer, opsional)*: Jumlah data per halaman (default: 10, maks: 50).
-- `page` *(integer, opsional)*: Nomor halaman.
+### 3.1 Autentikasi Pengguna: `POST /api/login`
+- **Rate Limit:** Maksimal 5 permintaan gagal per menit (mengembalikan status HTTP 429 jika terlampaui).
+- **Request Body:**
+  ```json
+  {
+    "email": "admin@perpus.test",
+    "password": "password"
+  }
+  ```
+- **Respons Sukses (HTTP 200 OK):**
+  ```json
+  {
+    "message": "Login berhasil.",
+    "token": "1|abcdef123456...",
+    "token_type": "Bearer",
+    "user": {
+      "id": 1,
+      "name": "Administrator",
+      "email": "admin@perpus.test",
+      "role": "admin",
+      "member_code": null
+    }
+  }
+  ```
 
-### 3.2 `POST /api/loans`
-Membuat transaksi peminjaman baru melalui domain model.
-- **Request Body (JSON):**
+---
+
+### 3.2 Profil Pengguna: `GET /api/me`
+- **Header:** `Authorization: Bearer <token>`
+- **Respons Sukses (HTTP 200 OK):**
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "name": "Administrator",
+      "email": "admin@perpus.test",
+      "role": "admin",
+      "member_code": null,
+      "phone": null
+    }
+  }
+  ```
+
+---
+
+### 3.3 Transaksi Peminjaman: `POST /api/loans`
+- **Header:** `Authorization: Bearer <token>`
+- **Request Body:**
   ```json
   {
     "user_id": 3,
     "book_ids": [1, 2]
   }
   ```
-- **Aturan Bisnis Validasi:**
-  - `user_id` wajib ada dan terdaftar pada tabel `users`.
-  - `book_ids` berupa array minimal 1 dan maksimal 3 buku (`config/library.php`).
-  - Pengguna tidak boleh memiliki denda `unpaid` atau pinjaman aktif yang melewati jatuh tempo (*overdue*).
-  - Seluruh buku yang dipinjam wajib memiliki stok fisik $> 0$.
-- **Respons (HTTP 201 Created):**
-  Mengembalikan data resource transaksi peminjaman baru dan otomatis mengurangi stok fisik buku terkait.
-
-### 3.3 `POST /api/loans/{id}/return`
-Mengembalikan buku yang dipinjam dan secara otomatis mengalkulasi denda keterlambatan.
-- **Request Body (JSON, opsional):**
+- *Catatan Otorisasi:* Anggota hanya dapat meminjam untuk dirinya sendiri (`user_id` otomatis diisi sesuai identitas token).
+- **Respons Sukses (HTTP 201 Created):**
   ```json
   {
-    "returned_at": "2026-05-15"
+    "data": {
+      "id": 15,
+      "user_id": 3,
+      "loaned_at": "2026-11-02",
+      "due_date": "2026-11-09",
+      "returned_at": null,
+      "fine_amount": 0,
+      "fine_status": "none",
+      "items": [
+        { "id": 1, "title": "Clean Code", "isbn": "978-01-32350-88-4" }
+      ]
+    }
   }
   ```
-  *(Jika `returned_at` diabaikan, sistem menggunakan tanggal hari ini).*
-- **Efek Samping:**
-  - Stok fisik seluruh buku pada peminjaman ini dikembalikan (+1).
-  - Jika `returned_at > due_date`, denda dihitung berdasarkan rumus:
-    $$\text{denda} = \min(\text{hari\_terlambat} \times \text{fine\_per\_day}, \text{fine\_max}) \times \text{jumlah\_buku}$$
-  - `fine_status` menjadi `'unpaid'` jika denda $> 0$, atau `'none'` jika tepat waktu.
 
-### 3.4 `POST /api/loans/{id}/pay-fine`
-Mencatat pelunasan denda keterlambatan buku.
-- **Validasi:** Transaksi harus berstatus `fine_status === 'unpaid'`.
-- **Respons (HTTP 200 OK):** Mengubah `fine_status` menjadi `'paid'`.
+---
+
+### 3.4 Pencegahan IDOR: `GET /api/loans/{id}`
+- Jika anggota `A` mencoba mengakses detail pinjaman milik anggota `B`:
+- **Respons Galat (HTTP 403 Forbidden):**
+  ```json
+  {
+    "message": "Akses ditolak. Anda tidak memiliki izin untuk melihat riwayat pinjaman pengguna lain."
+  }
+  ```
+
+---
+
+### 3.5 Penanganan Konflik Integritas Basis Data: `DELETE /api/categories/{id}`
+- Jika kategori masih menaungi buku pada basis data (aturan FK `restrict`):
+- **Respons Galat (HTTP 409 Conflict):**
+  ```json
+  {
+    "message": "Kategori tidak dapat dihapus karena masih digunakan oleh buku terkait.",
+    "error": "Conflict"
+  }
+  ```

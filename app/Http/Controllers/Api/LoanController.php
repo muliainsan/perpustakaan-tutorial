@@ -13,14 +13,20 @@ class LoanController extends Controller
 {
     /**
      * Tampilkan riwayat dan daftar transaksi peminjaman.
+     * Anggota hanya dapat melihat peminjaman miliknya sendiri (Pencegahan IDOR).
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = min((int) $request->input('per_page', 10), 50);
+        $user = $request->user();
 
         $loans = Loan::with(['user', 'loanItems.book'])
-            ->when($request->filled('user_id'), function ($query) use ($request) {
-                $query->where('user_id', $request->input('user_id'));
+            ->when($user && $user->role === 'anggota', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }, function ($query) use ($request) {
+                if ($request->filled('user_id')) {
+                    $query->where('user_id', $request->input('user_id'));
+                }
             })
             ->when($request->filled('fine_status'), function ($query) use ($request) {
                 $query->where('fine_status', $request->input('fine_status'));
@@ -38,11 +44,19 @@ class LoanController extends Controller
     }
 
     /**
-     * Tampilkan detail transaksi peminjaman spesifik.
+     * Tampilkan detail transaksi peminjaman spesifik dengan pencegahan IDOR.
      */
-    public function show(int $id): LoanResource
+    public function show(Request $request, int $id): LoanResource|JsonResponse
     {
         $loan = Loan::with(['user', 'loanItems.book'])->findOrFail($id);
+        $user = $request->user();
+
+        // Validasi Otorisasi IDOR: Anggota tidak boleh melihat pinjaman milik anggota lain
+        if ($user && $user->role === 'anggota' && $loan->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'Akses ditolak. Anda tidak memiliki izin untuk melihat riwayat pinjaman pengguna lain.'
+            ], 403);
+        }
 
         return new LoanResource($loan);
     }
@@ -52,12 +66,13 @@ class LoanController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $validated = $request->validate([
-            'user_id'    => ['required', 'integer', 'exists:users,id'],
+            'user_id'    => ['sometimes', 'required', 'integer', 'exists:users,id'],
             'book_ids'   => ['required', 'array', 'min:1'],
             'book_ids.*' => ['required', 'integer', 'exists:books,id'],
         ], [
-            'user_id.required'    => 'ID pengguna peminjam wajib disertakan.',
             'user_id.exists'      => 'Pengguna tidak ditemukan dalam sistem.',
             'book_ids.required'   => 'Daftar ID buku yang dipinjam wajib diisi.',
             'book_ids.array'      => 'Format book_ids harus berupa array.',
@@ -65,7 +80,23 @@ class LoanController extends Controller
             'book_ids.*.exists'   => 'Salah satu ID buku tidak valid.',
         ]);
 
-        $loan = Loan::borrow((int) $validated['user_id'], $validated['book_ids']);
+        $borrowerId = $user ? $user->id : ($validated['user_id'] ?? null);
+
+        if ($user && in_array($user->role, ['admin', 'petugas'], true) && isset($validated['user_id'])) {
+            $borrowerId = (int) $validated['user_id'];
+        } elseif ($user && $user->role === 'anggota' && isset($validated['user_id']) && (int) $validated['user_id'] !== $user->id) {
+            return response()->json([
+                'message' => 'Akses ditolak. Anggota hanya dapat meminjam atas nama sendiri.'
+            ], 403);
+        }
+
+        if (!$borrowerId) {
+            return response()->json([
+                'message' => 'ID pengguna peminjam wajib disertakan.'
+            ], 422);
+        }
+
+        $loan = Loan::borrow((int) $borrowerId, $validated['book_ids']);
 
         return (new LoanResource($loan))
             ->response()
@@ -73,7 +104,7 @@ class LoanController extends Controller
     }
 
     /**
-     * Proses pengembalian buku dan kalkulasi denda otomatis.
+     * Proses pengembalian buku dan kalkulasi denda otomatis (Petugas/Admin).
      */
     public function returnBooks(Request $request, int $id): JsonResponse
     {
@@ -93,19 +124,11 @@ class LoanController extends Controller
     }
 
     /**
-     * Catat pelunasan denda keterlambatan peminjaman.
+     * Catat pelunasan denda keterlambatan peminjaman (Petugas/Admin).
      */
     public function payFine(int $id): JsonResponse
     {
         $loan = Loan::findOrFail($id);
-
-        if ($loan->fine_status !== 'unpaid') {
-            return response()->json([
-                'message' => 'Transaksi ini tidak memiliki denda tertunggak yang perlu dilunasi.',
-                'data'    => new LoanResource($loan),
-            ], 422);
-        }
-
         $loan->markFinePaid();
 
         return response()->json([

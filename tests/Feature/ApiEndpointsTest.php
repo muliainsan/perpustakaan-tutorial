@@ -82,6 +82,13 @@ class ApiEndpointsTest extends TestCase
 
     public function test_api_loan_transaction_lifecycle(): void
     {
+        $admin = User::firstOrCreate(['email' => 'admin@perpus.test'], [
+            'name'     => 'Administrator',
+            'password' => bcrypt('password'),
+            'role'     => 'admin',
+        ]);
+        \Laravel\Sanctum\Sanctum::actingAs($admin);
+
         $user = User::factory()->create(['role' => 'anggota']);
         $category = Category::first();
 
@@ -128,6 +135,13 @@ class ApiEndpointsTest extends TestCase
 
     public function test_api_error_responses_always_return_json_without_accept_header(): void
     {
+        $admin = User::firstOrCreate(['email' => 'admin@perpus.test'], [
+            'name'     => 'Administrator',
+            'password' => bcrypt('password'),
+            'role'     => 'admin',
+        ]);
+        \Laravel\Sanctum\Sanctum::actingAs($admin);
+
         // Kirim request HTTP POST biasa tanpa header Accept: application/json
         $response = $this->call('POST', '/api/loans', [], [], [], [
             'HTTP_ACCEPT' => '*/*',

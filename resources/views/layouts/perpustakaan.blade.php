@@ -22,23 +22,63 @@
 
                 <nav class="hidden md:flex items-center space-x-1">
                     <a href="{{ route('catalog.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('catalog.index') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                        Katalog Publik
+                        Katalog
                     </a>
-                    <a href="{{ route('admin.books.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.books.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                        Kelola Buku
-                    </a>
-                    <a href="{{ route('admin.categories.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.categories.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                        Kelola Kategori
-                    </a>
-                    <a href="{{ route('admin.authors.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.authors.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                        Kelola Penulis
-                    </a>
+
+                    @auth
+                        @if (in_array(auth()->user()->role, ['admin', 'petugas'], true))
+                            <a href="{{ route('admin.books.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.books.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                                Kelola Buku
+                            </a>
+                            <a href="{{ route('admin.categories.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.categories.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                                Kategori
+                            </a>
+                            <a href="{{ route('admin.authors.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.authors.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                                Penulis
+                            </a>
+                            <a href="{{ route('loans.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('loans.index') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                                Peminjaman
+                            </a>
+                        @endif
+
+                        @if (auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.users.index') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('admin.users.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                                Pengguna
+                            </a>
+                        @endif
+
+                        @if (auth()->user()->role === 'anggota')
+                            <a href="{{ route('member.loans') }}" class="px-3 py-2 rounded-md text-sm font-medium transition {{ request()->routeIs('member.loans') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                                Pinjaman Saya
+                            </a>
+                        @endif
+                    @endauth
                 </nav>
 
-                <div class="flex items-center space-x-2">
-                    <span class="text-xs bg-indigo-800 text-indigo-200 px-2.5 py-1 rounded-full border border-indigo-600 font-mono">
-                        Laravel 13
-                    </span>
+                <div class="flex items-center space-x-3">
+                    @guest
+                        <a href="{{ route('login') }}" class="text-sm font-medium text-indigo-100 hover:text-white px-3 py-1.5 rounded-lg hover:bg-indigo-600 transition">
+                            Masuk
+                        </a>
+                        <a href="{{ route('register') }}" class="text-sm font-medium bg-white text-indigo-700 hover:bg-indigo-50 px-3.5 py-1.5 rounded-lg shadow-sm transition">
+                            Daftar
+                        </a>
+                    @else
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full {{ auth()->user()->role === 'admin' ? 'bg-purple-800 text-purple-200' : (auth()->user()->role === 'petugas' ? 'bg-blue-800 text-blue-200' : 'bg-emerald-800 text-emerald-200') }}">
+                                {{ ucfirst(auth()->user()->role) }}
+                            </span>
+                            <span class="text-sm font-medium text-white hidden sm:inline">
+                                {{ auth()->user()->name }}
+                            </span>
+                            <form action="{{ route('logout') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="text-xs bg-indigo-800 hover:bg-indigo-900 text-indigo-200 hover:text-white px-2.5 py-1.5 rounded border border-indigo-600 transition">
+                                    Keluar
+                                </button>
+                            </form>
+                        </div>
+                    @endguest
                 </div>
             </div>
         </div>
@@ -48,15 +88,35 @@
             <a href="{{ route('catalog.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('catalog.index') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
                 Katalog Publik
             </a>
-            <a href="{{ route('admin.books.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.books.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                Kelola Buku
-            </a>
-            <a href="{{ route('admin.categories.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.categories.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                Kelola Kategori
-            </a>
-            <a href="{{ route('admin.authors.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.authors.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
-                Kelola Penulis
-            </a>
+
+            @auth
+                @if (in_array(auth()->user()->role, ['admin', 'petugas'], true))
+                    <a href="{{ route('admin.books.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.books.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                        Kelola Buku
+                    </a>
+                    <a href="{{ route('admin.categories.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.categories.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                        Kelola Kategori
+                    </a>
+                    <a href="{{ route('admin.authors.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.authors.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                        Kelola Penulis
+                    </a>
+                    <a href="{{ route('loans.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('loans.index') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                        Peminjaman
+                    </a>
+                @endif
+
+                @if (auth()->user()->role === 'admin')
+                    <a href="{{ route('admin.users.index') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('admin.users.*') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                        Manajemen Pengguna
+                    </a>
+                @endif
+
+                @if (auth()->user()->role === 'anggota')
+                    <a href="{{ route('member.loans') }}" class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs('member.loans') ? 'bg-indigo-900 text-white' : 'text-indigo-100 hover:bg-indigo-600' }}">
+                        Pinjaman Saya
+                    </a>
+                @endif
+            @endauth
         </div>
     </header>
 
@@ -98,11 +158,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-            <p>&copy; {{ date('Y') }} Sistem Perpustakaan. Modul Praktikum Pemrograman Web - Laravel 13.</p>
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">
+            &copy; {{ date('Y') }} Sistem Informasi Perpustakaan. Dikembangkan untuk Praktikum Pemrograman Web.
         </div>
     </footer>
 </body>
 </html>
-

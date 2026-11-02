@@ -7,10 +7,22 @@ use App\Models\Book;
 use App\Models\Category;
 use App\Models\Loan;
 use App\Models\LoanItem;
+use App\Models\User;
 use Tests\TestCase;
 
 class BookCrudTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $admin = User::firstOrCreate(['email' => 'admin@perpus.test'], [
+            'name'     => 'Administrator',
+            'password' => bcrypt('password'),
+            'role'     => 'admin',
+        ]);
+        $this->actingAs($admin);
+    }
     public function test_public_catalog_can_be_viewed(): void
     {
         $response = $this->get(route('catalog.index'));

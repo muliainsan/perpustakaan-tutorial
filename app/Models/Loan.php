@@ -225,6 +225,25 @@ class Loan extends Model
     }
 
     /**
+     * Periksa apakah buku sudah dikembalikan.
+     */
+    public function isReturned(): bool
+    {
+        return $this->returned_at !== null;
+    }
+
+    /**
+     * Periksa apakah peminjaman telah melewati batas jatuh tempo (terlambat).
+     */
+    public function isOverdue(): bool
+    {
+        $compareDate = $this->returned_at ? Carbon::parse($this->returned_at) : now();
+        $dueDate = Carbon::parse($this->due_date);
+
+        return $compareDate->gt($dueDate);
+    }
+
+    /**
      * Logika Bisnis: Pelunasan Denda
      */
     public function markFinePaid(): void
